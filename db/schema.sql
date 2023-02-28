@@ -1,1 +1,4 @@
-CREATE DATABASE IF NOT EXISTS backend_db;
+CREATE DATABASE IF NOT EXISTS ecommerce_db;
+
+USE  ecommerce_db;
+
