@@ -1,4 +1,5 @@
 const express = require('express');
+const routes = require('./routes');
 const sequelize = require('./config/connection');
 const path = require('path');
 // const dbSetup = require('./db/schema.sql');
@@ -11,12 +12,13 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Sets up the Express app to handle data parsing
-app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
+app.use(routes);
 
 // Force true to drop/recreate table(s) on every sync
-sequelize.sync({ force: true}).then(() => {
+sequelize.sync({ force: false}).then(() => {
   app.listen(PORT, () => console.log(`Now listening http://localhost:${PORT}`));
 });
 

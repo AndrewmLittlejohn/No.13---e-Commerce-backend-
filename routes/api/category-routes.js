@@ -36,10 +36,10 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   // create a new category
   try{
-    const Category = await Category.create({
+    const newCategory = await Category.create({
     category_name: req.body.category_name,
     });
-    res.status(200).json(Category);
+    res.status(200).json(newCategory);
   } catch (err) {
     res.status(400).json(err);
   }    
@@ -47,14 +47,14 @@ router.post('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   // update a category by its `id` value
-  try{  const Category = await Category.findByPk(req.params.id) 
+  try{  const category = await Category.findByPk(req.params.id) 
     if (!category){
       res.status(404).json({message: 'No Category found by that id.' });
       return;
     }
     Category.category_name = req.body.category_name;
-    await Category.update();
-    res.send(Category);
+    await category.update();
+    res.send(category);
   } catch (err) {
     res.status(500).json('Error, update did not execute')
   } 

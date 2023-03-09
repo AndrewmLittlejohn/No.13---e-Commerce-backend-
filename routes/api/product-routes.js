@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { Product, Category, Tag, ProductTag, Product } = require('../../models');
+const { Product, Category, Tag } = require('../../models');
 
 // The `/api/products` endpoint
 
@@ -8,10 +8,14 @@ router.get('/', async (req, res) => {
   // find all products
   // be sure to include its associated Category and Tag data
   try{
-    const Product = await Product.findAll({
+    const product = await Product.findAll({
       include: [{ model: Tag }, { model: Category }],
     });
-      return res.json(Product);
+    if (!product) {
+      res.status(404).json({ message: 'No product found by that id' });
+      return;
+    }
+      return res.json(product);
   } catch (err) {
     res.status(500).json(err)
   }
@@ -22,14 +26,14 @@ router.get('/:id', async (req, res) => {
   // find a single product by its `id`
   // be sure to include its associated Category and Tag data
   try{
-    const Product = await Product.findByPK(req.params.id, {
+    const product = await Product.findByPk(req.params.id, {
       include: [{ model: Tag }, { model: Category }],
     });
-    if (!Product){
+    if (!product){
       res.status(404).json({message: 'No Product found by that id.' });
       return;
     }
-    return res.json(Product);
+    return res.json(product);
   } catch (err) {
     res.status(500).json(err);
   }
@@ -37,28 +41,26 @@ router.get('/:id', async (req, res) => {
 
 // create new product
 router.post('/', async (req, res) => {
+  console.log('Request body:', req.body);
   try{
-    const Product = await Product.create({
+    const product = await Product.create({
       product_name: req.body.product_name,
       price: req.body.price,
       stock: req.body.stock,
       category_id: req.body.category_id
       });
-      res.status(200).json(Product);
-  
+      
+      console.log('Request 1 body:', product);
 
-      if (req.body.tagIds.length) {
+      if (Array.isArray(req.body.tagIds) && req.body.tagIds.length) {
         const productTagIdArr = req.body.tagIds.map((tag_id) => {
           return {
-            product_id: Product.id,
+            product_id: product.id,
             tag_id,
           };
         });
         await ProductTag.bulkCreate(productTagIdArr);
-      } else {
-      // if no product tags, just respond
-      res.status(200).json(Product); 
-      }
+      } res.status(200).json(product);
     } catch(err) {
       console.log(err);
       res.status(400).json(err);
@@ -110,15 +112,29 @@ router.put('/:id', (req, res) => {
 router.delete('/:id', async (req, res) => {
   // delete one product by its `id` value
   try{
-    const Product = await Product.destroy({
+    const product = await Product.destroy({
       where: {
         id: req.params.id,
       },
     })
-    res.status(200).json(Product);
+    res.status(200).json(product);
   } catch (err) {
     res.status(400).json(err);
   }    
 });
 
 module.exports = router;
+
+// the async route wasn't working so I tried the .then variety and it worked, then I tried async again and it too worked, odd. 
+// router.delete('/:id', (req, res) => {
+//   // Looks for the books based on isbn given in the request parameters and deletes the instance from the database
+//   Product.destroy({
+//     where: {
+//       id: req.params.id,
+//     },
+//   })
+//     .then((deletedProduct) => {
+//       res.json(deletedProduct);
+//     })
+//     .catch((err) => res.json(err));
+// });
