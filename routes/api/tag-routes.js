@@ -48,6 +48,22 @@ router.post('/', async (req, res) => {
   }
 });
 
+// router.put('/:id', async (req, res) => {
+//   // update a tag's name by its `id` value
+//   try{
+//     const tag = await Tag.findByPk(req.params.id)
+//     if(!tag){
+//       res.status(404).json({message: 'No Tag found by that id'});
+//       return;
+//     }
+//     Tag.tag_name = req.body.tag_name;
+//     await tag.update();
+//     res.send(tag);
+//   } catch (err) {
+//     req.status(500).json('Error, update did not execute')
+//   }
+// });
+
 router.put('/:id', async (req, res) => {
   // update a tag's name by its `id` value
   try{
@@ -55,14 +71,17 @@ router.put('/:id', async (req, res) => {
     if(!tag){
       res.status(404).json({message: 'No Tag found by that id'});
       return;
+    } else{
+      await Tag.update(
+        {tag_name: req.body.tag_name},
+        {where: {id: req.params.id}}
+      );
+      const updatedTag = await Tag.findByPk(req.params.id)
+        res.send(updatedTag);
+    } }  catch (err){
+      res.status(500).json('Error, update did not execute')
     }
-    Tag.tag_name = req.body.tag_name;
-    await tag.update();
-    res.send(tag);
-  } catch (err) {
-    req.status(500).json('Error, update did not execute')
-  }
-});
+  });
 
 router.delete('/:id', async (req, res) => {
   // delete on tag by its `id` value

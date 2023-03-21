@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { Product, Category, Tag } = require('../../models');
+const { Product, Category, Tag, ProductTag } = require('../../models');
 
 // The `/api/products` endpoint
 
@@ -67,7 +67,12 @@ router.post('/', async (req, res) => {
     };
 });
 
-// update product
+
+//
+/* update product - !!!! When I run this code in insomnia it returns a blank response body so I tried the async await version.
+Similar to how when I tried the async version of delete it didn't work but I switched to .then and things functioned just fine. 
+I will expand in my README.md about other a issue I had with my response bodies for .posts yesterday */
+
 // router.put('/:id', (req, res) => {
 //   // update product data
 //   Product.update(
@@ -117,47 +122,109 @@ router.post('/', async (req, res) => {
 //     });
 // });
 
+
+/* This .put works though it still throws */
+// router.put('/:id', async (req, res) => {
+//   try {
+//     const {id} = req.params;
+//     const {product_name, price, stock, category_id, tagIds} = req.body;
+
+//     //update product
+//     await Product.update(
+//       {product_name, price, stock, category_id},
+//       {where: {id}}
+//     );
+//     // find all associated tags from ProductTag
+//     const productTags = await ProductTag.findAll({where:{product_id: id}});
+    
+//     //get list of current tag_ids
+//     const currentTagIds = productTags.map(({tag_id}) => tag_id);
+//     const newTagIds = tagIds.filter(tagId => !currentTagIds.includes(tagId));
+    
+//     // create filtered list of new tag_ids
+//     const newProductTags = newTagIds.map(tagId => {
+//       return {product_id: id, tag_id: tagId};
+//     });
+
+//     // figure out which ones to remove
+//     const tagsToRemove = productTags.filter(({tag_id}) => !tagIds.includes(tag_id));
+//     const tagsToRemoveIds = tagsToRemove.map(({id}) => id);
+    
+//     // run both actions
+//     await ProductTag.destroy({where: {id: tagsToRemoveIds}});
+//     await ProductTag.bulkCreate(newProductTags);
+//     const updatedProductTags = await ProductTag.findAll({ where: {product_id: id}});
+//     return res.json(updatedProductTags);
+//   } catch (err) {
+//     console.log(err);
+//     return res.status(400).json({message: 'Error updating product'});
+//   }
+// });
+
 router.put('/:id', async (req, res) => {
   try {
-    const { id } = req.params;
-    const { product_name, price, stock, category_id, tagIds } = req.body;
+      const product = await Product.findByPk(req.params.id)
+      if(!product){
+        res.status(404).json({message: 'No product found by that id'});
+        return;
+      } else {
+        await Product.update(
+        { product_name: req.body.product_name,
+          price: req.body.price,
+          stock: req.body.stock,
+          category_id: req.body.category_id },
+          {where: {id: req.params.id}}
+        );
 
-    // Update product
-    await Product.update(
-      { product_name, price, stock, category_id },
-      { where: { id } }
-    );
+    console.log('Product updated successfully');
 
     // Find all associated tags
-    const productTags = await ProductTag.findAll({ where: { product_id: id } });
+    const productTags = await ProductTag.findAll({where: {product_id: id}});
+
+    console.log('Current product tags', productTags);
 
     // Get current tag IDs
-    const currentTagIds = productTags.map(({ tag_id }) => tag_id);
+    const currentTagIds = productTags.map(({tag_id}) => tag_id);
 
     // Create filtered list of new tag IDs
-    const newTagIds = tagIds.filter(tagId => !currentTagIds.includes(tagId));
+    let newTagIds = [];
+    if (tagIds && Array.isArray(tagIds)) {
+      newTagIds = tagIds.filter(tagId => !currentTagIds.includes(tagId));
+    }
+
+    console.log('New tag IDs', newTagIds);
 
     // Create array of new ProductTag objects to bulk create
     const newProductTags = newTagIds.map(tagId => {
-      return { product_id: id, tag_id: tagId };
+      return {product_id: id, tag_id: tagId};
     });
-      // figure out which ones to remove
-      const productTagsToRemove = productTags
-        .filter(({ tag_id }) => !req.body.tagIds.includes(tag_id))
-        .map(({ id }) => id);
 
-      // run both actions
-      return Promise.all([
-        ProductTag.destroy({ where: { id: productTagsToRemove } }),
-        ProductTag.bulkCreate(newProductTags),
-      ]);
-    })
-    .then((updatedProductTags) => res.json(updatedProductTags))
-    .catch((err) => {
-      // console.log(err);
-      res.status(400).json(err);
-    });
+    console.log('New product tags to create', newProductTags);
+
+    // Destroy ProductTags that need to be removed
+    const tagsToRemove = productTags.filter(({tag_id}) => !tagIds.includes(tag_id));
+    const tagsToRemoveIds = tagsToRemove.map(({id}) => id);
+    await ProductTag.destroy({ where: { id: tagsToRemoveIds } });
+
+    console.log('Product tags removed successfully');
+
+    // Bulk create new ProductTags
+    await ProductTag.bulkCreate(newProductTags);
+
+    console.log('New product tags created successfully');
+
+    // Find updated ProductTags and return them
+    const updatedProductTags = await ProductTag.findAll({where:{product_id: id}});
+
+    console.log('Updated product tags', updatedProductTags);
+
+    return res.json(updatedProductTags);
+  }} catch (err) {
+    console.log(err);
+    return res.status(400).json({message: 'Error updating product'});
+  }
 });
+
 
 router.delete('/:id', async (req, res) => {
   // delete one product by its `id` value
@@ -167,7 +234,9 @@ router.delete('/:id', async (req, res) => {
         id: req.params.id,
       },
     })
-    res.status(200).json(product);
+
+    res.status(200).json({message: `${product} has been deleted.`});
+        
   } catch (err) {
     res.status(400).json(err);
   }    
