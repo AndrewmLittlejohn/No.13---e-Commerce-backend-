@@ -15,3 +15,7 @@
     I did get things to work with these changes though, not sure if there was other user error with insomnia that this covered up for but it worked!
 
 2.  I don't fully understand how to use insomnia effectively, too often I would have an error but wasn't able to get any guidance regarding system errors that were occuring other than spending my time on stackoverflow. 
+
+## Notation and references
+A wide variet of tutorials were used to help with my understanding of the routes. I do not believe any code was directly pasted into my file as such I don't have any direct citations listed.
+
