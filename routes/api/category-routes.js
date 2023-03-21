@@ -46,7 +46,8 @@ router.post('/', async (req, res) => {
 });
 
 router.put('/:id', async (req,res) => {
-  try{     const category = await Category.findByPk(req.params.id) 
+  try{  
+    const category = await Category.findByPk(req.params.id) 
     if (!category){
       res.status(404).json({message: 'No Category found by that id.' });
       return;
@@ -57,8 +58,7 @@ router.put('/:id', async (req,res) => {
     );  
     const updatedCategory = await Category.findByPk(req.params.id);
       res.send(updatedCategory);
-    res.send(category);
- } } catch (err) {
+ }} catch (err) {
     res.status(500).json('Error, update did not execute')
   } 
   });
