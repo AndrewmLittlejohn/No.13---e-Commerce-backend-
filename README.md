@@ -19,3 +19,5 @@
 ## Notation and references
 A wide variet of tutorials were used to help with my understanding of the routes. I do not believe any code was directly pasted into my file as such I don't have any direct citations listed.
 
+Video has been added, due to size limits gitHub won't allow me to link it
+
